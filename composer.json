@@ -1,0 +1,25 @@
+{
+    "name": "wilensky/cli-colorizer",
+    "type": "library",
+    "description": "A lightweight tool for easy PHP7 CLI output coloring.",
+    "keywords": ["cli", "color", "colour", "command", "line"],
+    "homepage": "https://github.com/wilensky/CliColorizer",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "G. Wilensky"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/wilensky/CliColorizer/issues",
+        "wiki": "https://github.com/wilensky/CliColorizer/wiki"
+    },
+    "require": {
+        "php": ">=7.0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Wilensky\\": ""
+        }
+    }
+}
