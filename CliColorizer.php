@@ -17,8 +17,8 @@ namespace Wilensky;
  * @method string fgLCyan(string $string, bool $rst = true)
  * @method string fgRed(string $string, bool $rst = true)
  * @method string fgLRed(string $string, bool $rst = true)
- * @method string fgPurple(string $string, bool $rst = true)
- * @method string fgLPurple(string $string, bool $rst = true)
+ * @method string fgMagenta(string $string, bool $rst = true)
+ * @method string fgLMagenta(string $string, bool $rst = true)
  * @method string fgBrown(string $string, bool $rst = true)
  * @method string fgYellow(string $string, bool $rst = true)
  * @method string fgWhite(string $string, bool $rst = true)
@@ -35,79 +35,79 @@ namespace Wilensky;
  */
 class CliColorizer
 {
-    /** Reset escape */
-    const RST = "\e[0m";
-
-    /** Bold escape */
+    /** Bold sequence */
     const BOLD = "\e[1m";
+    /** Underline sequence */
+    const UNDERLINE = "\e[4m";
+    /** Invert sequence */
+    const INVERT = "\e[7m";
+    /** Hide sequence */
+    const HIDE = "\e[8m";
 
-    /** Foreground constants prefix */
-    const FG_PREFIX = 'FG_';
+    /** Reset all attributes */
+    const RESET_ALL = "\e[0m";
     
-    /** Background constants prefix */
-    const BG_PREFIX = 'BG_';
+    /** Particular attributes reset sequences */
+    const RESET = [
+        'ALL' => self::RESET_ALL,
+        self::BOLD => "\e[21m",
+        self::UNDERLINE => "\e[24m",
+        self::INVERT => "\e[27m",
+        self::HIDE => "\e[28m"
+    ];
+    
+    /** Foreground colors */
+    const FG = [
+        'BLACK' => "\033[0;30m",
+        'L_GRAY' => "\033[0;37m",
+        'D_GRAY' => "\033[1;30m",
+        'BLUE' => "\033[0;34m",
+        'L_BLUE' => "\033[1;34m",
+        'GREEN' => "\033[0;32m",
+        'L_GREEN' => "\033[1;32m",
+        'CYAN' => "\033[0;36m",
+        'L_CYAN' => "\033[1;36m",
+        'RED' => "\033[0;31m",
+        'L_RED' => "\033[1;31m",
+        'MAGENTA' => "\033[0;35m",
+        'L_MAGENTA' => "\033[1;35m",
+        'BROWN' => "\033[0;33m",
+        'YELLOW' => "\033[1;33m",
+        'WHITE' => "\033[1;37m"
+    ];
 
-    /** Foreground color escape */
-    const FG_BLACK = "\033[0;30m";
-    const FG_L_GRAY = "\033[0;37m";
-    const FG_D_GRAY = "\033[1;30m";
-    const FG_BLUE = "\033[0;34m";
-    const FG_L_BLUE = "\033[1;34m";
-    const FG_GREEN = "\033[0;32m";
-    const FG_L_GREEN = "\033[1;32m";
-    const FG_CYAN = "\033[0;36m";
-    const FG_L_CYAN = "\033[1;36m";
-    const FG_RED = "\033[0;31m";
-    const FG_L_RED = "\033[1;31m";
-    const FG_PURPLE = "\033[0;35m";
-    const FG_L_PURPLE = "\033[1;35m";
-    const FG_BROWN = "\033[0;33m";
-    const FG_YELLOW = "\033[1;33m";
-    const FG_WHITE = "\033[1;37m";
-
-    /** Background color escape */
-    const BG_BLACK = "\033[0m";
-    const BG_D_GRAY = "\033[40m";
-    const BG_RED = "\033[41m";
-    const BG_GREEN = "\033[42m";
-    const BG_YELLOW = "\033[43m";
-    const BG_BLUE = "\033[44m";
-    const BG_MAGENTA = "\033[45m";
-    const BG_CYAN = "\033[46m";
-    const BG_L_GRAY = "\033[47m";
-
-    /**
-     * @param string $constant
-     * @return string
-     * @throws \RuntimeException
-     */
-    private static function getColor(string $constant): string
-    {
-        $fqcn = __CLASS__ . '::' . $constant;
-        if (!defined($fqcn)) {
-            throw new \RuntimeException('Unknown color `' . $constant . '`');
-        }
-
-        return constant($fqcn);
-    }
+    /** Background colors */
+    const BG = [
+        'BLACK' => "\033[0m",
+        'D_GRAY' => "\033[40m",
+        'RED' => "\033[41m",
+        'GREEN' => "\033[42m",
+        'YELLOW' => "\033[43m",
+        'BLUE' => "\033[44m",
+        'MAGENTA' => "\033[45m",
+        'CYAN' => "\033[46m",
+        'L_GRAY' => "\033[47m"
+    ];
 
     /**
-     * @param string $color
-     * @param string $s
+     * Generic string decorator 
+     * @param string $escape
+     * @param string $str
      * @param bool $rst
      * @return string
      */
-    private static function str(string $color, string $s, bool $rst = true): string
+    private static function str(string $escape, string $str, bool $rst = true): string
     {
         return sprintf(
-            '%s%s%s'.self::RST,
-            self::getColor(strtoupper($color)),
-            $s,
-            $rst === true ? self::RST : ''
+            '%s%s%s',
+            $escape,
+            $str,
+            $rst === true ? self::RESET_ALL : ''
         );
     }
     
     /**
+     * Foreground colorizer
      * @param string $s
      * @param string $color
      * @param bool $rst
@@ -115,10 +115,16 @@ class CliColorizer
      */
     public static function fg(string $s, string $color = 'l_gray', bool $rst = true): string
     {
-        return self::str(self::FG_PREFIX.$color, $s, $rst);
+        $clr = strtoupper($color);
+        
+        if ((self::FG[$clr] ?? null) === null) {
+            throw new \RuntimeException('Unknown foreground color `' . $color . '`', 100);
+        }
+        return self::str(self::FG[$clr], $s, $rst);
     }
 
     /**
+     * Background colorizer
      * @param string $s
      * @param string $color
      * @param bool $rst
@@ -126,30 +132,90 @@ class CliColorizer
      */
     public static function bg(string $s, string $color = 'black', bool $rst = true): string
     {
-        return self::str(self::BG_PREFIX.$color, $s, $rst);
+        $clr = strtoupper($color);
+        
+        if ((self::BG[$clr] ?? null) === null) {
+            throw new \RuntimeException('Unknown background color `' . $color . '`', 200);
+        }
+        return self::str(self::BG[$clr], $s, $rst);
     }
 
     /**
+     * Generic format decorator
+     * @param string $tf Typeface escape sequence
+     * @param string $str Output string
+     * @param bool $rst Flag for resetting typeface by the end of the string
+     * @return string
+     */
+    private static function strFormat(string $tf, string $str, bool $rst = true): string
+    {
+        return self::str($tf, $str, false).($rst === true ? (self::RESET[$tf] ?? '') : '');
+    }
+    
+    /**
+     * Bold text
      * @param string $s
      * @param bool $rst
      * @return string
      */
     public static function bold(string $s, bool $rst = true): string
     {
-        return self::str('bold', $s, $rst);
+        return self::strFormat(self::BOLD, $s, $rst);
     }
     
     /**
+     * Underlined text
+     * @param string $s
+     * @param bool $rst
+     * @return string
+     */
+    public static function underline(string $s, bool $rst = true): string
+    {
+        return self::strFormat(self::UNDERLINE, $s, $rst);
+    }
+    
+    /**
+     * Inverted text
+     * @param string $s
+     * @param bool $rst
+     * @return string
+     */
+    public static function invert(string $s, bool $rst = true): string
+    {
+        return self::strFormat(self::INVERT, $s, $rst);
+    }
+    
+    /**
+     * Hidden text
+     * @param string $s
+     * @param bool $rst
+     * @return string
+     */
+    public static function hide(string $s, bool $rst = true): string
+    {
+        return self::strFormat(self::HIDE, $s, $rst);
+    }
+    
+    /**
+     * Provides convenient magic for the class
      * @param string $name
      * @param array $arguments
      * @return string
      */
     public static function __callStatic($name, $arguments)
     {
-        $color = ltrim(strtolower(preg_replace('/[A-Z]/', '_$0', $name)), '_');
+        $color = ltrim(strtoupper(preg_replace('/[A-Z]/', '_$0', $name)), '_');
         
-        array_unshift($arguments, $color);
+        if (strpos($color, 'FG_') === 0) {
+            array_splice($arguments, 1, 0, substr($color, 3)); // Avoiding `FG_` prefix
+            return self::fg(...$arguments);
+        }
         
-        return forward_static_call_array([self::class, 'str'], $arguments);
+        if (strpos($color, 'BG_') === 0) {
+            array_splice($arguments, 1, 0, substr($color, 3)); // Avoiding `BG_` prefix
+            return self::bg(...$arguments);
+        }
+        
+        throw new \BadFunctionCallException('Wrong method '.$name.'()');
     }
 }
